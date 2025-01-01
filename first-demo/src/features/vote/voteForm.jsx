@@ -1,61 +1,40 @@
 "use client";
 
-import axios from 'axios';
-import React, { useState, useEffect } from 'react';
-import {getCookie} from "@/utils/useCookie";
+import React, { useState } from "react";
+import axios from "axios";
 
-function VoteForm() {
+export default function VoteForm({ initialBidenCount, initialTrumpCount }) {
+    const [bidenCount, setBidenCount] = useState(initialBidenCount);
+    const [trumpCount, setTrumpCount] = useState(initialTrumpCount);
     const [typedMessage, setTypedMessage] = useState("");
-    const [bidenCount, setBidenCount] = useState(0);
-    const [trumpCount, setTrumpCount] = useState(0);
     const [error, setError] = useState("");
-
-    useEffect(() => {
-        getVoteNum();
-    }, []);
 
     const handleInputChange = (e) => {
         setTypedMessage(e.target.value);
     };
 
-    const handleSubmit = (e) => {
+    const handleSubmit = async (e) => {
         e.preventDefault();
-        postVote();
-    };
-
-    const postVote = () => {
-        const csrftoken = getCookie('csrftoken');
-        const config = {
-            headers: {
-                'X-CSRFToken': csrftoken
-            },
-            withCredentials: true
-        };
-        axios.post('http://localhost:8000/api/vote/post-vote', {
-            vote: typedMessage
-        }, config)
-        .then((response) => {
+        try {
+            await axios.post('http://localhost:8000/api/vote/post-vote', { vote: typedMessage });
             getVoteNum();
-        })
-        .catch((error) => {
-            setError("An error occurred: " + error.message);
-        });
+        } catch (err) {
+            setError("An error occurred: " + err.message);
+        }
     };
 
-    const getVoteNum = () => {
-        axios.get('http://localhost:8000/api/vote/get-vote')
-        .then((response) => {
+    const getVoteNum = async () => {
+        try {
+            const response = await axios.get('http://localhost:8000/api/vote/get-vote');
             setBidenCount(response.data.biden_count);
             setTrumpCount(response.data.trump_count);
-        })
-        .catch((error) => {
-            setError("An error occurred: " + error.message);
-        });
+        } catch (err) {
+            setError("An error occurred: " + err.message);
+        }
     };
 
     return (
         <div>
-            <h1>Test Form: Vote for Biden or Trump!</h1>
             <form onSubmit={handleSubmit}>
                 <input
                     type="text"
@@ -67,9 +46,7 @@ function VoteForm() {
             </form>
             <p>Biden Count: {bidenCount}</p>
             <p>Trump Count: {trumpCount}</p>
-            {error && <p style={{color: 'red'}}>{error}</p>}
+            {error && <p style={{ color: "red" }}>{error}</p>}
         </div>
     );
 }
-
-export default VoteForm;
