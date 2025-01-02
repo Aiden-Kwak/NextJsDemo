@@ -21,7 +21,8 @@ class PostAPI(APIView):
                 return Response({'error': 'Invalid vote option'}, status=status.HTTP_400_BAD_REQUEST)
 
             vote.save()
-            return Response({'biden_count': vote.biden_count, 'trump_count': vote.trump_count}, status=status.HTTP_201_CREATED)
+            response_serializer = VoteSerializer(vote)
+            return Response(response_serializer.data, status=status.HTTP_201_CREATED)
         else:
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
@@ -31,4 +32,5 @@ class GetAPI(APIView):
             vote = Vote(biden_count=0, trump_count=0)
             vote.save()
         vote = Vote.objects.first()
-        return Response({'biden_count': vote.biden_count, 'trump_count': vote.trump_count})
+        serializer = VoteSerializer(vote)
+        return Response(serializer.data, status=status.HTTP_200_OK)
